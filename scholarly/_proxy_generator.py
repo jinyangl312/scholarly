@@ -421,6 +421,7 @@ class ProxyGenerator(object):
 
         for cookie in self._get_webdriver().get_cookies():
             cookie.pop("httpOnly", None)
+            #cookie.pop("sameSite", None)
             cookie.pop("expiry", None)
             self._session.cookies.set(**cookie)
 
@@ -455,10 +456,13 @@ class ProxyGenerator(object):
         return self._session
 
     def _close_session(self):
+        #try:
         if self._session:
             self._session.close()
         if self._webdriver:
             self._webdriver.quit()
+        #except:
+        #    self.logger.warning('Browser may have been shutting down')
 
     def _fp_coroutine(self, timeout=1, wait_time=120):
         """A coroutine to continuosly yield free proxies

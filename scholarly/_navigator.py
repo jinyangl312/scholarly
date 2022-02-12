@@ -63,12 +63,16 @@ class Navigator(object, metaclass=Singleton):
         if pg2 is not None:
             self.pm2 = pg2
         else:
+            # FreeProxies does not work here
+            self.pm2 = pg1
+            '''
             self.pm2 = ProxyGenerator()
             proxy_works = self.pm2.FreeProxies()
             if not proxy_works:
                 self.logger.info("FreeProxy as a secondary proxy is not working. "
                                  "Using the primary proxy for all requests")
                 self.pm2 = pg1
+            '''
 
         self._session1 = self.pm1.get_session()
         self._session2 = self.pm2.get_session()
@@ -110,7 +114,10 @@ class Navigator(object, metaclass=Singleton):
             try:
                 w = random.uniform(1,2)
                 time.sleep(w)
-                resp = session.get(pagerequest, timeout=timeout)
+                if (self._session1.proxies):
+                    resp = session.get(pagerequest, proxies=self._session1.proxies, timeout=timeout)
+                else:
+                    resp = session.get(pagerequest, timeout=timeout)
                 self.logger.debug("Session proxy config is {}".format(session.proxies))
 
                 has_captcha = self._requests_has_captcha(resp.text)
@@ -123,6 +130,7 @@ class Navigator(object, metaclass=Singleton):
                     continue  # Retry request within same session
                 elif resp.status_code == 403:
                     self.logger.info("Got an access denied error (403).")
+                    #raise Exception("403")
                     if not pm.has_proxy():
                         self.logger.info("No other connections possible.")
                         if not self.got_403:
