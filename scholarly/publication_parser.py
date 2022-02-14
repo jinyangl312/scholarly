@@ -177,6 +177,17 @@ class PublicationParser(object):
 
     def _scholar_pub(self, __data, publication: Publication):
         databox = __data.find('div', class_='gs_ri')
+            
+        summary = databox.find('div', class_='gs_rs')
+        publication['date_back'] = -1
+
+        if summary != None:
+            publication['summary'] = summary.text.strip()
+            if summary.find('span', class_="gs_age"):
+                publication['date_back'] = re.findall("\d+", summary.find('span').text.strip())[0]
+        else:
+            publication['summary'] = ' '
+        
         title = databox.find('h3', class_='gs_rt')
 
         cid = __data.get('data-cid')
