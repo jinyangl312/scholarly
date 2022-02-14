@@ -275,7 +275,7 @@ class Navigator(object, metaclass=Singleton):
             pub = publication_parser.fill(pub)
         return pub
 
-    def search_publications(self, url: str) -> _SearchScholarIterator:
+    def search_publications(self, url: str, max_date_back: int=9999999999) -> _SearchScholarIterator:
         """Returns a Publication Generator given a url
 
         :param url: the url where publications can be found.
@@ -283,7 +283,7 @@ class Navigator(object, metaclass=Singleton):
         :returns: An iterator of Publications
         :rtype: {_SearchScholarIterator}
         """
-        return _SearchScholarIterator(self, url)
+        return _SearchScholarIterator(self, url, max_date_back)
 
     def search_author_id(self, id: str, filled: bool = False, sortby: str = "citedby", publication_limit: int = 0) -> Author:
         """Search by author ID and return a Author object
