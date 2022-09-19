@@ -46,12 +46,13 @@ class _SearchScholarIterator(object):
     I have removed all logging from here for simplicity. -V
     """
 
-    def __init__(self, nav, url: str):
+    def __init__(self, nav, url: str, max_date_back: int=9999999999):
         self._url = url
         self._nav = nav
         self._load_url(url)
         self.total_results = self._get_total_results()
         self.pub_parser = PublicationParser(self._nav)
+        self.max_date_back = max_date_back
 
     def _load_url(self, url: str):
         # this is temporary until setup json file
@@ -81,6 +82,8 @@ class _SearchScholarIterator(object):
             row = self._rows[self._pos]
             self._pos += 1
             res = self.pub_parser.get_publication(row, PublicationSource.PUBLICATION_SEARCH_SNIPPET)
+            if int(res['date_back']) > self.max_date_back:
+                raise StopIteration
             return res
         elif self._soup.find(class_='gs_ico gs_ico_nav_next'):
             url = self._soup.find(
@@ -174,6 +177,17 @@ class PublicationParser(object):
 
     def _scholar_pub(self, __data, publication: Publication):
         databox = __data.find('div', class_='gs_ri')
+            
+        summary = databox.find('div', class_='gs_rs')
+        publication['date_back'] = -1
+
+        if summary != None:
+            publication['summary'] = summary.text.strip()
+            if summary.find('span', class_="gs_age"):
+                publication['date_back'] = re.findall("\d+", summary.find('span').text.strip())[0]
+        else:
+            publication['summary'] = ' '
+        
         title = databox.find('h3', class_='gs_rt')
 
         cid = __data.get('data-cid')

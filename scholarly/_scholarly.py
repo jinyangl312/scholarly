@@ -80,7 +80,8 @@ class _Scholarly:
                     citations: bool = True, year_low: int = None,
                     year_high: int = None, sort_by: str = "relevance",
                     include_last_year: str = "abstracts",
-                    start_index: int = 0)->_SearchScholarIterator:
+                    start_index: int = 0,
+                    max_date_back: int = 9999999999)->_SearchScholarIterator:
         """Searches by query and returns a generator of Publication objects
 
         :param query: terms to be searched
@@ -144,9 +145,9 @@ class _Scholarly:
         url = self._construct_url(_PUBSEARCH.format(requests.utils.quote(query)), patents=patents,
                                   citations=citations, year_low=year_low, year_high=year_high,
                                   sort_by=sort_by, start_index=start_index)
-        return self.__nav.search_publications(url)
+        return self.__nav.search_publications(url, max_date_back)
 
-    def search_citedby(self, publication_id: int, **kwargs):
+    def search_citedby(self, publication_id: int, max_date_back: int=9999999999, **kwargs):
         """Searches by Google Scholar publication id and returns a generator of Publication objects.
 
         :param publication_id: Google Scholar publication id
@@ -155,7 +156,7 @@ class _Scholarly:
         For the remaining parameters, see documentation of `search_pubs`.
         """
         url = self._construct_url(_CITEDBYSEARCH.format(str(publication_id)), **kwargs)
-        return self.__nav.search_publications(url)
+        return self.__nav.search_publications(url, max_date_back)
 
     def search_single_pub(self, pub_title: str, filled: bool = False)->PublicationParser:
         """Search by scholar query and return a single Publication container object

@@ -63,12 +63,16 @@ class Navigator(object, metaclass=Singleton):
         if pg2 is not None:
             self.pm2 = pg2
         else:
+            # FreeProxies does not work here
+            self.pm2 = pg1
+            '''
             self.pm2 = ProxyGenerator()
             proxy_works = self.pm2.FreeProxies()
             if not proxy_works:
                 self.logger.info("FreeProxy as a secondary proxy is not working. "
                                  "Using the primary proxy for all requests")
                 self.pm2 = pg1
+            '''
 
         self._session1 = self.pm1.get_session()
         self._session2 = self.pm2.get_session()
@@ -110,7 +114,10 @@ class Navigator(object, metaclass=Singleton):
             try:
                 w = random.uniform(1,2)
                 time.sleep(w)
-                resp = session.get(pagerequest, timeout=timeout)
+                if (self._session1.proxies):
+                    resp = session.get(pagerequest, proxies=self._session1.proxies, timeout=timeout)
+                else:
+                    resp = session.get(pagerequest, timeout=timeout)
                 self.logger.debug("Session proxy config is {}".format(session.proxies))
 
                 has_captcha = self._requests_has_captcha(resp.text)
@@ -123,6 +130,7 @@ class Navigator(object, metaclass=Singleton):
                     continue  # Retry request within same session
                 elif resp.status_code == 403:
                     self.logger.info("Got an access denied error (403).")
+                    #raise Exception("403")
                     if not pm.has_proxy():
                         self.logger.info("No other connections possible.")
                         if not self.got_403:
@@ -267,7 +275,7 @@ class Navigator(object, metaclass=Singleton):
             pub = publication_parser.fill(pub)
         return pub
 
-    def search_publications(self, url: str) -> _SearchScholarIterator:
+    def search_publications(self, url: str, max_date_back: int=9999999999) -> _SearchScholarIterator:
         """Returns a Publication Generator given a url
 
         :param url: the url where publications can be found.
@@ -275,7 +283,7 @@ class Navigator(object, metaclass=Singleton):
         :returns: An iterator of Publications
         :rtype: {_SearchScholarIterator}
         """
-        return _SearchScholarIterator(self, url)
+        return _SearchScholarIterator(self, url, max_date_back)
 
     def search_author_id(self, id: str, filled: bool = False, sortby: str = "citedby", publication_limit: int = 0) -> Author:
         """Search by author ID and return a Author object

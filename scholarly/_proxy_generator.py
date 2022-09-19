@@ -349,7 +349,8 @@ class ProxyGenerator(object):
 
         options = webdriver.ChromeOptions()
         options.add_argument('--headless')
-        self._webdriver = webdriver.Chrome('chromedriver', options=options)
+        self._webdriver = webdriver.Chrome(
+            executable_path='C://Program Files//Google//Chrome//Application//chromedriver.exe')
         self._webdriver.get("https://scholar.google.com")  # Need to pre-load to set cookies later
 
         return self._webdriver
@@ -421,6 +422,7 @@ class ProxyGenerator(object):
 
         for cookie in self._get_webdriver().get_cookies():
             cookie.pop("httpOnly", None)
+            cookie.pop("sameSite", None)
             cookie.pop("expiry", None)
             self._session.cookies.set(**cookie)
 
@@ -455,10 +457,13 @@ class ProxyGenerator(object):
         return self._session
 
     def _close_session(self):
+        #try:
         if self._session:
             self._session.close()
         if self._webdriver:
             self._webdriver.quit()
+        #except:
+        #    self.logger.warning('Browser may have been shutting down')
 
     def _fp_coroutine(self, timeout=1, wait_time=120):
         """A coroutine to continuosly yield free proxies
