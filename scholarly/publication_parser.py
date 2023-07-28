@@ -61,6 +61,12 @@ class _SearchScholarIterator(object):
         self._rows = self._soup.find_all('div', class_='gs_r gs_or gs_scl')
 
     def _get_total_results(self):
+        try:
+            result_link = self._soup.find('a', text='See all results')
+            self._url = result_link["href"]
+            self._load_url(self._url)
+        except:
+            pass
         if self._soup.find("div", class_="gs_pda"):
             return None
 
@@ -177,7 +183,7 @@ class PublicationParser(object):
 
     def _scholar_pub(self, __data, publication: Publication):
         databox = __data.find('div', class_='gs_ri')
-            
+
         summary = databox.find('div', class_='gs_rs')
         publication['date_back'] = -1
 
@@ -187,7 +193,7 @@ class PublicationParser(object):
                 publication['date_back'] = re.findall("\d+", summary.find('span').text.strip())[0]
         else:
             publication['summary'] = ' '
-        
+
         title = databox.find('h3', class_='gs_rt')
 
         cid = __data.get('data-cid')
