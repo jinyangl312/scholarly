@@ -60,6 +60,9 @@ class _SearchScholarIterator(object):
         self._pos = 0
         self._rows = self._soup.find_all('div', class_='gs_r gs_or gs_scl')
 
+        if len(self._rows) == 0:
+            self._rows = self._soup.find_all('div', class_='gs_r gs_or gs_scl gs_fmar')
+
     def _get_total_results(self):
         try:
             result_link = self._soup.find('a', text='See all results')
